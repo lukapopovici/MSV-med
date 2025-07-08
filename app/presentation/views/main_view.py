@@ -19,6 +19,7 @@ class MainView(CenteredView):
         self.setGeometry(100, 100, 1800, 900)
         self._setup_ui()
         load_style(self)
+        self.patients_button.setEnabled(False)
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
