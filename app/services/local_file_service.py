@@ -296,7 +296,6 @@ class LocalFileService(ILocalFileService):
 
             success_count = 0
             total_instances = len(instances)
-            print(f"Creating new local study with {total_instances} instances...")
 
             for i, instance in enumerate(instances):
                 instance_id = instance.get("ID")
@@ -304,25 +303,18 @@ class LocalFileService(ILocalFileService):
                     continue
 
                 try:
-                    print(f"Processing local instance {i + 1}/{total_instances}: {instance_id}")
 
                     # Read local DICOM file
                     dicom_data = self.get_local_dicom_file(instance_id)
-                    print(f"      📥 Read local DICOM: {len(dicom_data)} bytes")
 
                     # Anonymize
-                    print(f"Anonymizing local DICOM data...")
                     dicom_data = self._anonymizer.anonymize_dicom(dicom_data)
-                    print(f"Local DICOM anonymized: {len(dicom_data)} bytes")
 
                     # Add examination result if provided
                     if examination_result:
-                        print(f"Adding examination result: {len(examination_result)} chars")
                         dicom_data = self._add_examination_result_to_dicom(dicom_data, examination_result)
-                        print(f"Modified local DICOM: {len(dicom_data)} bytes")
 
                     # Send to target PACS
-                    print(f"Sending to {target_url}/instances...")
                     response = requests.post(
                         f"{target_url}/instances",
                         data=dicom_data,
@@ -333,12 +325,10 @@ class LocalFileService(ILocalFileService):
 
                     if response.status_code == 200:
                         success_count += 1
-                        print(f"Local instance sent successfully")
                     else:
                         print(f"Failed to send local instance: {response.status_code}")
 
                 except Exception as e:
-                    print(f"Error sending local instance {instance_id}: {e}")
                     continue
 
             print(f"Final result: {success_count}/{total_instances} local instances sent")
@@ -394,7 +384,8 @@ class LocalFileService(ILocalFileService):
     def _extract_metadata_from_dataset(self, dataset) -> Dict[str, Any]:
         try:
             return {
-                "Patient Name": str(getattr(dataset, 'PatientName', 'N/A')).replace('^', ' '),
+                "Patient Name": str(getattr(dataset, 'PatientName', 'N/A')),
+                "CNP": str(getattr(dataset, 'PatientID', 'N/A')),
                 "Patient Birth Date": self._format_date(getattr(dataset, 'PatientBirthDate', '')),
                 "Patient Sex": str(getattr(dataset, 'PatientSex', 'N/A')),
                 "Patient Age": str(getattr(dataset, 'PatientAge', 'N/A')),
@@ -402,7 +393,6 @@ class LocalFileService(ILocalFileService):
                 "Study Instance UID": str(getattr(dataset, 'StudyInstanceUID', 'N/A')),
                 "Accession Number": str(getattr(dataset, 'AccessionNumber', 'N/A')),
                 "Referring Physician Name": str(getattr(dataset, 'ReferringPhysicianName', 'N/A')),
-                "Radiopharmaceutic"
                 "Description": str(getattr(dataset, 'StudyDescription', 'Local DICOM Study')),
                 "Series Status": "LOCAL",
                 "Source": "Local File"

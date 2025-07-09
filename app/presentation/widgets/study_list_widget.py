@@ -57,34 +57,20 @@ class SearchableStudyListWidget(QWidget):
         search_layout.addWidget(self.clear_button)
         layout.addWidget(search_container)
 
-        # Hidden results label
+        # Results label
         self.results_label = QLabel()
         self.results_label.setVisible(False)
         self.results_label.setMaximumHeight(0)
         layout.addWidget(self.results_label)
 
-        # Study list scrollable
+        # Study list
         self.study_list = QListWidget()
         self.study_list.setObjectName("StudyList")
         self.study_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.study_list.itemClicked.connect(self._on_item_clicked)
         self.study_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        # ScrollArea
-        scroll_area = QScrollArea()
-        scroll_area.setObjectName("StudyListScrollArea")
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        list_container = QWidget()
-        list_layout = QVBoxLayout(list_container)
-        list_layout.setContentsMargins(0, 0, 0, 0)
-        list_layout.setSpacing(0)
-        list_layout.addWidget(self.study_list)
-
-        scroll_area.setWidget(list_container)
-        layout.addWidget(scroll_area)
+        layout.addWidget(self.study_list)
 
     def _on_search_text_changed(self, text: str):
         self.clear_button.setVisible(bool(text.strip()))
@@ -127,10 +113,10 @@ class SearchableStudyListWidget(QWidget):
         found_studies = len(filtered_studies)
 
         if found_studies == 0:
-            self.results_label.setText(f"Nu s-au găsit studii pentru '{search_text}'")
+            self.results_label.setText(f"Nu s-au gasit studii pentru '{search_text}'")
             self.results_label.setStyleSheet("color: #dc2626; font-weight: 500;")
         else:
-            self.results_label.setText(f"Găsite {found_studies} din {total_studies} studii")
+            self.results_label.setText(f"Gasite {found_studies} din {total_studies} studii")
             self.results_label.setStyleSheet("color: #059669; font-weight: 500;")
 
         self.results_label.setVisible(True)

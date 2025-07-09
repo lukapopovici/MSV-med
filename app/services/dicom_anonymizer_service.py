@@ -38,6 +38,7 @@ class DicomAnonymizer:
                 if hasattr(dataset, field):
                     setattr(dataset, field, "")
 
+            # Salvez DICOM in memorie si retunrez datele ca bytes
             output = BytesIO()
             dataset.save_as(output, write_like_original=False)
             return output.getvalue()
@@ -57,6 +58,5 @@ class DicomAnonymizer:
             return f"ANON{abs(int(hash_value[:8], 16)) % 999999:06d}"
 
         except Exception:
-            # Fallback la un ID aleator
             import uuid
             return f"ANON{abs(hash(str(uuid.uuid4()))) % 999999:06d}"

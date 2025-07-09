@@ -192,7 +192,7 @@ class PacsManagementWidget(QWidget):
         restart_layout = QVBoxLayout(restart_group)
 
         restart_info_label = QLabel(
-            "⚠️ Dacă ai modificat configurația PACS, repornește aplicația\n"
+            "Dacă ai modificat configurația PACS, repornește aplicația\n"
             "pentru ca modificările să aibă efect complet."
         )
         restart_info_label.setWordWrap(True)
@@ -494,9 +494,6 @@ class PacsManagementWidget(QWidget):
             source_pacs_id = settings_service.get_source_pacs_id()
             target_pacs_id = settings_service.get_target_pacs_id()
 
-            # Add "Auto (First)" option for source
-            self.source_pacs_combo.addItem("Auto (First PACS)", -1)
-
             # Track if we found the current selections
             source_found = False
             target_found = False
@@ -617,15 +614,11 @@ class PacsManagementWidget(QWidget):
             if final_reply:
                 print("Restarting application...")
 
-                # Get the current executable path
                 python = sys.executable
-                script = sys.argv[0]
 
-                # Close current application
                 QApplication.quit()
 
-                # Start new instance
-                os.execl(python, python, script)
+                os.execl(python, python, "-m", "app.main")
 
         except Exception as e:
             self._notification_service.show_error(

@@ -22,10 +22,10 @@ class Formatters:
     def format_metadata_display(metadata: Dict[str, Any]) -> str:
         formatted_items = []
 
-        # Mapare pentru nume mai prietenoase
         display_names = {
             # Date Pacient
             "Patient Name": "Nume pacient",
+            "CNP": "CNP",
             "Patient ID": "ID pacient",
             "Patient Birth Date": "Data nașterii",
             "Patient Sex": "Sex",
@@ -50,7 +50,6 @@ class Formatters:
             "Series Status": "Status"
         }
 
-        # Grupare logică
         patient_section = []
         study_section = []
         technical_section = []
@@ -59,14 +58,13 @@ class Formatters:
             display_name = display_names.get(key, key)
             formatted_value = value if value and value != 'N/A' else "Necunoscut"
 
-            if key in ["Patient Name", "Patient ID", "Patient Birth Date", "Patient Sex", "Patient Age"]:
+            if key in ["Patient Name", "CNP", "Patient ID", "Patient Birth Date", "Patient Sex", "Patient Age"]:
                 patient_section.append(f"{display_name}: {formatted_value}")
             elif key in ["Study Date", "Study Time", "Study Description", "Accession Number", "Referring Physician"]:
                 study_section.append(f"{display_name}: {formatted_value}")
             else:
                 technical_section.append(f"{display_name}: {formatted_value}")
 
-        # Construire text formatat cu secțiuni
         result = []
         if patient_section:
             result.append("=== DATE PACIENT ===")

@@ -42,7 +42,7 @@ class AdminView(CenteredView):
         user_info_label = QLabel(f"Logat ca: {user_display}")
         user_info_label.setObjectName("UserLabel")
 
-        self.logout_button = QPushButton("Iesi din cont")
+        self.logout_button = QPushButton("Logout")
         self.logout_button.setObjectName("LogoutButton")
         self.logout_button.clicked.connect(self._handle_logout)
 

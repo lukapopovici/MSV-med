@@ -15,7 +15,6 @@ class PdfService(IPdfService):
     def generate_pdf(self, content: str, metadata: Dict[str, Any], output_path: str, doctor_name: str = None,
                  selected_title: str = None, header_image_path: str = None) -> str:
         try:
-            # Nu mai concatenează cu self._output_dir - folosește calea completă primită
             self._pdf_generator.create_pdf(content, metadata, output_path, doctor_name, selected_title, header_image_path)
             return output_path
         except Exception as e:

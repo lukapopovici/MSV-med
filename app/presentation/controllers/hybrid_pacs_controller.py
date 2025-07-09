@@ -45,10 +45,8 @@ class HybridPacsController:
             metadata = self.get_study_metadata(study_id)
 
             if custom_path:
-                # Folosește calea specificată de utilizator
                 pdf_path = custom_path
             else:
-                # Folosește calea default
                 patient = re.sub(r'\W+', '_', metadata["Patient Name"])
                 study_date = metadata["Study Date"].replace("-", "")
                 timestamp = datetime.now().strftime("%H%M%S")
@@ -62,11 +60,9 @@ class HybridPacsController:
             settings = Settings()
             header_image_path = settings.HEADER_IMAGE_PATH if os.path.exists(settings.HEADER_IMAGE_PATH) else None
 
-            # Trimite calea completă la pdf_service
             self._pdf_service.generate_pdf(result_text, metadata, pdf_path, doctor_name, selected_title, header_image_path)
             self._last_generated_pdf_path = pdf_path
 
-            # Save examination result to study
             self._save_examination_result_to_study(study_id, result_text)
 
             filename = os.path.basename(pdf_path)
@@ -117,13 +113,11 @@ class HybridPacsController:
                 if not proceed:
                     return False
 
-            # Get study metadata
             metadata = self.get_study_metadata(study_id)
             patient_name = metadata.get("Patient Name", "Unknown")
             study_date = metadata.get("Study Date", "Unknown")
             description = metadata.get("Description", "Unknown")
 
-            # Save examination result to study
             self._save_examination_result_to_study(study_id, examination_result)
 
             return True, {
@@ -165,8 +159,6 @@ class HybridPacsController:
             if not self._notification_service.ask_confirmation(parent_widget, "Confirmare trimitere", confirm_message):
                 return False
 
-            print(f"Debug: Sending to selected target PACS {target_url} with auth {target_auth[0]}:***")
-
             # Send studies
             success_count = 0
             failed_studies = []
@@ -175,7 +167,6 @@ class HybridPacsController:
                 try:
                     # Update progress
                     study_type = "LOCAL" if self._is_local_study(queued_study.study_id) else "PACS"
-                    print(f"Sending {study_type} study {i + 1}/{study_count}: {queued_study.patient_name}")
 
                     success = self._send_study_to_target_pacs(
                         queued_study.study_id,
@@ -186,17 +177,13 @@ class HybridPacsController:
 
                     if success:
                         success_count += 1
-                        print(f"✓ Successfully sent {study_type} study: {queued_study.patient_name}")
                     else:
                         failed_studies.append(f"{queued_study.patient_name} ({queued_study.study_date}) [{study_type}]")
-                        print(f"✗ Failed to send {study_type} study: {queued_study.patient_name}")
 
                 except Exception as e:
                     study_type = "LOCAL" if self._is_local_study(queued_study.study_id) else "PACS"
                     failed_studies.append(
                         f"{queued_study.patient_name} ({queued_study.study_date}) [{study_type}] - {str(e)}")
-                    print(f"✗ Error sending {study_type} study {queued_study.patient_name}: {e}")
-
             if success_count == study_count:
                 message = f"Toate {study_count} studiile au fost trimise cu succes la PACS.\n"
                 message += f"Rezultatele explorărilor au fost incluse în metadata DICOM."
@@ -230,9 +217,6 @@ class HybridPacsController:
                                    examination_result: str = None) -> bool:
         try:
             study_type = "LOCAL" if self._is_local_study(study_id) else "PACS"
-            print(f"Sending {study_type} study {study_id} to {target_url}")
-            print(f"Using authentication: {target_auth[0]}:***")
-            print(f"Examination result length: {len(examination_result) if examination_result else 0} characters")
 
             success = self._pacs_service.send_study_to_pacs(
                 study_id,

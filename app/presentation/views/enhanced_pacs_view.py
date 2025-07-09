@@ -12,6 +12,7 @@ from PyQt6.QtGui import QKeySequence, QShortcut
 
 from app.presentation.controllers.auth_controller import AuthController
 from app.presentation.controllers.hybrid_pacs_controller import HybridPacsController, StudiesWorker, QueueSenderWorker
+from app.presentation.views.base_view import CenteredView
 from app.presentation.widgets.study_list_widget import SearchableStudyListWidget, StudyQueueWidget
 from app.presentation.widgets.metadata_widget import MetadataWidget, ResultWidget
 from app.presentation.widgets.local_file_widgets import LocalFileManagerWidget, LocalFileDropWidget
@@ -20,7 +21,7 @@ from app.presentation.styles.style_manager import load_style
 from app.config.settings import Settings
 
 
-class EnhancedPacsView(QWidget):
+class EnhancedPacsView(CenteredView):
     def __init__(self, pacs_controller: HybridPacsController, auth_controller: AuthController):
         super().__init__()
         self._pacs_controller = pacs_controller
@@ -106,7 +107,8 @@ class EnhancedPacsView(QWidget):
 
         self.study_list = SearchableStudyListWidget()
         self.study_list.study_selected.connect(self._on_study_selected)
-        self.study_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.study_list.setMinimumHeight(400)
+        self.study_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         scroll_layout.addWidget(self.study_list)
 
         # Horizontal splitter for metadata and queue
@@ -281,6 +283,7 @@ class EnhancedPacsView(QWidget):
         self.study_thread.start()
 
     def _on_studies_loaded(self, study_ids):
+        self.study_list.clear_studies()
         self.study_list.set_loading(False)
         self.refresh_button.setEnabled(True)
         self.refresh_button.setText("Refresh")
@@ -372,7 +375,6 @@ class EnhancedPacsView(QWidget):
             self._notification_service.show_warning(self, "Warning", "Please enter examination results.")
             return
 
-        # Obține metadata pentru numele default al fișierului
         try:
             metadata = self._pacs_controller.get_study_metadata(study_id)
             patient_name = re.sub(r'\W+', '_', metadata["Patient Name"])
@@ -382,18 +384,14 @@ class EnhancedPacsView(QWidget):
         except:
             default_filename = f"medical_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
 
-        # Determină folder-ul de start pentru dialog
         if self._last_save_directory and os.path.exists(self._last_save_directory):
-            # Folosește ultimul folder folosit
             start_directory = os.path.join(self._last_save_directory, default_filename)
         else:
-            # Folosește folder-ul default din settings
             settings = Settings()
             default_save_dir = settings.PDF_OUTPUT_DIR
             os.makedirs(default_save_dir, exist_ok=True)
             start_directory = os.path.join(default_save_dir, default_filename)
 
-        # Dialog pentru selectarea locației de salvare
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Salvează raportul PDF",
@@ -402,13 +400,11 @@ class EnhancedPacsView(QWidget):
         )
 
         if not file_path:
-            return  # Utilizatorul a anulat
+            return
 
-        # Asigură-te că fișierul are extensia .pdf
         if not file_path.lower().endswith('.pdf'):
             file_path += '.pdf'
 
-        # SALVEAZĂ FOLDER-UL PENTRU URMĂTOAREA DATĂ
         self._last_save_directory = os.path.dirname(file_path)
 
         current_user = self._auth_controller.get_current_user() if self._auth_controller else None
@@ -417,7 +413,6 @@ class EnhancedPacsView(QWidget):
         settings = Settings()
         header_image_path = settings.HEADER_IMAGE_PATH
 
-        # Trimite calea completă specificată de utilizator
         success = self._pacs_controller.export_pdf(
             study_id, result_text, self, current_user, selected_title, 
             header_image_path, custom_path=file_path
@@ -432,7 +427,7 @@ class EnhancedPacsView(QWidget):
             self._notification_service.show_warning(self, "Warning", "Please select a study.")
             return
 
-        result_text = self.result_widget.get_result_text()
+        result_text = self.result_widget.get_result_text_html()
         current_user = self._auth_controller.get_current_user() if self._auth_controller else None
         selected_title = self.result_widget.get_selected_title()
         settings = Settings()
@@ -519,7 +514,6 @@ class EnhancedPacsView(QWidget):
             self._notification_service.show_warning(self, "Queue gol", "Nu sunt studii în queue pentru trimitere.")
             return
 
-        # Show progress and send in background
         self._show_sending_progress(queued_studies)
 
     def _show_sending_progress(self, queued_studies):
@@ -528,15 +522,10 @@ class EnhancedPacsView(QWidget):
         self.send_queue_button.setEnabled(False)
         self.send_queue_button.setText("⏳ Trimitere...")
 
-        # Nu mai e nevoie să preiau target_url separat
-        # target_url, _ = self._settings.get_target_pacs_config()
-
-        # Create worker thread
         self.sender_thread = QThread()
         self.sender_worker = QueueSenderWorker(
             self._pacs_controller,
             queued_studies
-            # Nu mai trimit target_url separat
         )
         self.sender_worker.moveToThread(self.sender_thread)
 

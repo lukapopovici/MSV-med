@@ -259,7 +259,7 @@ class LocalFileManagerWidget(QWidget):
                     description = metadata.get("Description", "Local Study")
                     file_count = len(instances)
 
-                    item_text = f"📄 {patient_name} - {study_date}\n   {description} ({file_count} files)"
+                    item_text = f"{patient_name} - {study_date}\n   {description} ({file_count} files)"
 
                     item = QListWidgetItem(item_text)
                     item.setData(Qt.ItemDataRole.UserRole, study_id)
@@ -370,7 +370,7 @@ class LocalStudyDetailsDialog(QMessageBox):
         self.setIcon(QMessageBox.Icon.Information)
 
         # Build details text
-        details_text = "📄 **Study Metadata:**\n"
+        details_text = "**Study Metadata:**\n"
         for key, value in metadata.items():
             details_text += f"• **{key}:** {value}\n"
 
@@ -407,7 +407,7 @@ class LocalFileDropWidget(QFrame):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Drop icon and text
-        drop_label = QLabel("📂\nDrag & Drop DICOM Files Here\n\nSupported formats: .dcm, .dicom, .dic")
+        drop_label = QLabel("\nDrag & Drop DICOM Files Here\n\nSupported formats: .dcm, .dicom, .dic")
         drop_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         drop_label.setStyleSheet("""
             QLabel {

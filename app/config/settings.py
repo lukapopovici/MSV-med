@@ -3,7 +3,7 @@ import os
 
 class Settings:
     # Database settings
-    DB_URI = "mysql+pymysql://root:admin@192.168.1.215:3306/medical_app"
+    DB_URI = "mysql+pymysql://root:admin@localhost:3306/medical_app"
 
     # Default PACS settings
     PACS_URL = "http://localhost:8042"

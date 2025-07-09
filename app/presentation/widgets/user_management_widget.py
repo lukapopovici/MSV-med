@@ -191,7 +191,6 @@ class UserManagementWidget(QWidget):
         return widget
 
     def _on_role_changed(self, role_text: str):
-        """Enable/disable title field based on role selection"""
         is_doctor = role_text == "doctor"
         self.title_input.setEnabled(is_doctor)
         if not is_doctor:
@@ -277,10 +276,10 @@ class UserManagementWidget(QWidget):
                 self.users_table.setRowHidden(row, True)
 
         if visible_count == 0:
-            self.user_results_label.setText(f"Nu s-au găsit utilizatori pentru '{text}'")
+            self.user_results_label.setText(f"Nu s-au gasit utilizatori pentru '{text}'")
             self.user_results_label.setStyleSheet("color: #dc2626; font-size: 11px; padding: 2px;")
         else:
-            self.user_results_label.setText(f"Găsiți {visible_count} din {total_count} utilizatori")
+            self.user_results_label.setText(f"Gasit {visible_count} din {total_count} utilizatori")
             self.user_results_label.setStyleSheet("color: #059669; font-size: 11px; padding: 2px;")
 
         self.user_results_label.setVisible(True)

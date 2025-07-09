@@ -57,7 +57,6 @@ class HybridPacsService(IPacsService):
                 examination_result=examination_result
             )
         else:
-            print(f"HybridPacsService: Sending PACS study {study_id} (anonymized)")
             return self._pacs_service.send_study_to_pacs(
                 study_id, target_url, target_auth, examination_result, anonymize=True
             )

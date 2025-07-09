@@ -202,7 +202,7 @@ class ResultWidget(QWidget):
             return
         
         # HTML pentru formatare
-        indicatie_html = f"""<p><b><i>Indicație:</i></b> pacient în vârsta de {age} ani este diagnosticat cu {diagnosis}</p>
+        indicatie_html = f"""<p><b><i>Indicație:</i></b> Pacient în vârsta de {age} ani este diagnosticat cu {diagnosis}</p>
 
         <p><b><i>Realizare:</i></b> </p>
 
@@ -226,6 +226,9 @@ class ResultWidget(QWidget):
             self.title_combo.setCurrentIndex(index)
 
     def get_result_text(self) -> str:
+        return self.text_edit.toPlainText()
+
+    def get_result_text_html(self) -> str:
         html_content = self.text_edit.toHtml()
 
         body_match = re.search(r'<body[^>]*>(.*?)</body>', html_content, re.DOTALL)

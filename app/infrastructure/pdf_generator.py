@@ -4,7 +4,6 @@ import base64
 from datetime import datetime
 from weasyprint import HTML, CSS
 from typing import Dict, Any
-from urllib.parse import urljoin
 from pathlib import Path
 
 
@@ -14,10 +13,6 @@ class PdfGenerator:
 
     def create_pdf(self, content: str, metadata: Dict[str, Any], output_path: str, doctor_name: str = None,
                    selected_title: str = None, header_image_path: str = None):
-
-        print(f"=== PDF GENERATOR DEBUG (WINDOWS) ===")
-        print(f"Header image path received: {header_image_path}")
-        print(f"Header image exists: {os.path.exists(header_image_path) if header_image_path else 'No path provided'}")
 
         generated_date = datetime.now().strftime("%d.%m.%Y %H:%M")
         current_year = datetime.now().strftime("%Y")
@@ -32,13 +27,11 @@ class PdfGenerator:
         if self.css_path:
             stylesheets.append(CSS(self.css_path))
 
-        # Pe Windows, folosim base_url pentru căile relative
         html_obj = HTML(string=html_content, base_url=Path.cwd().as_uri())
         html_obj.write_pdf(output_path, stylesheets=stylesheets)
 
     def _image_to_base64(self, image_path: str) -> str:
         try:
-            print(f"Converting image to base64: {image_path}")
             with open(image_path, 'rb') as image_file:
                 image_data = base64.b64encode(image_file.read()).decode('utf-8')
                 
@@ -53,7 +46,6 @@ class PdfGenerator:
                     mime_type = 'image/png'
                 
                 base64_string = f"data:{mime_type};base64,{image_data}"
-                print(f"Successfully converted to base64, length: {len(base64_string)}")
                 return base64_string
                 
         except Exception as e:
@@ -61,16 +53,11 @@ class PdfGenerator:
             return ""
 
     def _get_windows_file_uri(self, file_path: str) -> str:
-        """Convertește calea Windows în URI valid pentru WeasyPrint"""
         try:
             normalized_path = os.path.normpath(file_path)
             
             path_obj = Path(normalized_path)
             file_uri = path_obj.as_uri()
-            
-            print(f"Windows path: {file_path}")
-            print(f"Normalized path: {normalized_path}")
-            print(f"File URI: {file_uri}")
             
             return file_uri
             
@@ -98,22 +85,16 @@ class PdfGenerator:
 
         header_content = ""
         if header_image_path and os.path.exists(header_image_path):
-            print("Attempting base64 conversion...")
             base64_image = self._image_to_base64(header_image_path)
             if base64_image:
                 header_content = f'<img src="{base64_image}" alt="Antet Spital" class="header-image">'
-                print("✅ Using base64 image")
             else:
-                print("❌ Base64 conversion failed, trying file URI...")
                 file_uri = self._get_windows_file_uri(header_image_path)
                 if file_uri:
                     header_content = f'<img src="{file_uri}" alt="Antet Spital" class="header-image">'
-                    print("✅ Using file URI")
                 else:
-                    print("❌ File URI failed, using placeholder")
                     header_content = '<div class="header-placeholder"><!-- ANTET SPITAL - IMAGE ERROR --></div>'
         else:
-            print("❌ Header image not found, using placeholder")
             header_content = '<div class="header-placeholder"><!-- ANTET SPITAL --></div>'
 
         return f"""
@@ -278,6 +259,7 @@ class PdfGenerator:
         patient_fields = {
             # Patient information
             "Patient Name": "Nume pacient",
+            "CNP": "CNP",
             "Patient Birth Date": "Data nasterii",
             "Patient Sex": "Sex",
             "Patient Age": "Varsta",
@@ -317,13 +299,10 @@ class PdfGenerator:
         if not content.strip():
             return "<p><em style='color: #94a3b8; font-size: 11px; font-style: italic;'>Nu a fost introdus niciun rezultat al investigației.</em></p>"
 
-        # Dacă conținutul vine deja formatat ca HTML, procesează-l minimal
         if '<p>' in content or '<strong>' in content or '<em>' in content:
-            # Doar asigură-te că paragrafele au stilul corect
             content = re.sub(r'<p>', '<p style="margin: 12px 0; line-height: 1.5;">', content)
             return content
 
-        # Altfel, procesează ca text normal
         import html
         content = html.escape(content)
 
@@ -342,19 +321,15 @@ class PdfGenerator:
         if not date_str or date_str == 'N/A' or not date_str.strip():
             return date_str
 
-        # Elimină toate caracterele care nu sunt cifre
         clean_date = ''.join(filter(str.isdigit, date_str))
 
-        # Verifică dacă avem cel puțin 8 cifre pentru YYYYMMDD
         if len(clean_date) >= 8:
             year = clean_date[:4]
             month = clean_date[4:6]
             day = clean_date[6:8]
             return f"{year}-{month}-{day}"
 
-        # Dacă data vine deja formatată cu '-', returnează-o
         if '-' in date_str and len(date_str) == 10:
             return date_str
 
-        # Dacă nu putem formata, returnează originalul
         return date_str
