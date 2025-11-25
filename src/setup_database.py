@@ -2,62 +2,62 @@
 """
 Medical PACS Application - Database Initialization Script
 =========================================================
-Doar crearea bazei de date și tabelelor - fără utilizatori MySQL
+Doar crearea bazei de date si tabelelor - fara utilizatori MySQL
 """
 
 import sys
 import os
 
-# Verifică că suntem în directorul corect
+# Verifica ca suntem in directorul corect
 if not os.path.exists('app'):
-    print("❌ EROARE: Directorul 'app' nu a fost găsit!")
-    print("   Rulează scriptul din directorul rădăcină al proiectului.")
-    input("Apasă Enter pentru a ieși...")
+    print("EROARE: Directorul 'app' nu a fost gasit!")
+    print("   Ruleaza scriptul din directorul radacina al proiectului.")
+    input("Apasa Enter pentru a iesi...")
     sys.exit(1)
 
 # Adaugă directorul curent la Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
 
-print("🏥 Medical PACS - Inițializare Bază de Date")
+print("Medical PACS - Initializare Baza de Date")
 print("=" * 50)
 
-# Verifică dependențele
+# Verifica dependentele
 missing_deps = []
 
 try:
     import sqlalchemy
-    print("✅ SQLAlchemy găsit")
+    print("SQLAlchemy gasit")
 except ImportError:
     missing_deps.append("sqlalchemy")
 
 try:
     import pymysql
-    print("✅ PyMySQL găsit")
+    print("PyMySQL gasit")
 except ImportError:
     missing_deps.append("pymysql")
 
 try:
     import bcrypt
-    print("✅ bcrypt găsit")
+    print("bcrypt gasit")
 except ImportError:
     missing_deps.append("bcrypt")
 
 if missing_deps:
-    print(f"❌ Lipsesc dependențele: {', '.join(missing_deps)}")
-    print("   Instalează cu: pip install " + " ".join(missing_deps))
-    input("Apasă Enter pentru a ieși...")
+    print(f"Lipsesc dependentele: {', '.join(missing_deps)}")
+    print("   Instaleaza cu: pip install " + " ".join(missing_deps))
+    input("Apasa Enter pentru a iesi...")
     sys.exit(1)
 
 # Importă modulele aplicației
 try:
     from app.database.models import Base, User, PacsUrl, AppSettings, ReportTitle, RoleEnum
     from app.config.settings import Settings
-    print("✅ Module aplicație încărcate")
+    print("Module aplicatie incarcate")
 except ImportError as e:
-    print(f"❌ Nu pot încărca modulele aplicației: {e}")
-    print("   Verifică că toate fișierele sunt în locul corect.")
-    input("Apasă Enter pentru a ieși...")
+    print(f"Nu pot incarca modulele aplicatiei: {e}")
+    print("   Verifica ca toate fisierele sunt in locul corect.")
+    input("Apasa Enter pentru a iesi...")
     sys.exit(1)
 
 from sqlalchemy import create_engine, text
@@ -67,7 +67,7 @@ import time
 
 
 def wait_for_database(db_uri, max_attempts=30):
-    """Așteaptă ca baza de date să fie disponibilă"""
+    """Asteapta ca baza de date sa fie disponibila"""
 
     # Extrage URI-ul de bază (fără numele bazei de date)
     parts = db_uri.split('/')
@@ -75,7 +75,7 @@ def wait_for_database(db_uri, max_attempts=30):
 
     for attempt in range(max_attempts):
         try:
-            print(f"   Încercare {attempt + 1}/{max_attempts}...")
+            print(f"   Incercare {attempt + 1}/{max_attempts}...")
             test_engine = create_engine(
                 base_uri,
                 connect_args={'connect_timeout': 5}
@@ -83,43 +83,43 @@ def wait_for_database(db_uri, max_attempts=30):
             with test_engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
             test_engine.dispose()
-            print("✅ MariaDB este gata!")
+            print("MariaDB este gata!")
             return True
         except Exception as e:
             if attempt < max_attempts - 1:
-                print(f"   ⏳ MariaDB nu este încă gata, aștept 2 secunde...")
+                print(f"   MariaDB nu este inca gata, astept 2 secunde...")
                 time.sleep(2)
             else:
-                print(f"❌ MariaDB nu răspunde după {max_attempts} încercări: {e}")
+                print(f"MariaDB nu raspunde dupa {max_attempts} incercari: {e}")
                 raise
 
     return False
 
 
 def main():
-    """Funcția principală de inițializare"""
+    """Functia principala de initializare"""
 
-    # Obține configurația
+    # Obtine configuratia
     settings = Settings()
     db_uri = settings.DB_URI
 
-    print(f"📊 Conectare la: {db_uri}")
+    print(f"Conectare la: {db_uri}")
 
-    # Confirmă inițializarea
-    response = input("\nVrei să continui cu inițializarea bazei de date? ACEST PROCES VA ȘTERGE DATELE EXISTENTE! (y/N): ")
+    # Confirma initializarea
+    response = input("\nVrei sa continui cu initializarea bazei de date? ACEST PROCES VA STERGE DATELE EXISTENTE! (y/N): ")
     if response.lower() not in ['y', 'yes', 'da']:
-        print("❌ Inițializare anulată.")
+        print("Initializare anulata.")
         return
 
     try:
         # Așteaptă ca MariaDB să fie gata (maxim 60 secunde)
-        print("⏳ Aștept ca MariaDB să fie gata...")
+        print("Astept ca MariaDB sa fie gata...")
         wait_for_database(db_uri)
 
-        # Creează baza de date dacă nu există
+        # Creeaza baza de date daca nu exista
         create_database_if_needed(db_uri)
 
-        # Creează engine-ul cu retry și timeouts
+        # Creeaza engine-ul cu retry si timeouts
         engine = create_engine(
             db_uri,
             echo=False,
@@ -132,20 +132,20 @@ def main():
             }
         )
 
-        # ȘTERGE tabelele existente pentru a le recrea cu structura nouă
-        print("🗑️ Ștergere tabele existente...")
+        # STERGE tabelele existente pentru a le recrea cu structura noua
+        print("Stergere tabele existente...")
         try:
             Base.metadata.drop_all(engine)
-            print("✅ Tabele existente șterse!")
+            print("Tabele existente sterse!")
         except Exception as e:
-            print(f"⚠️ Nu s-au putut șterge tabelele existente (probabil nu existau): {e}")
+            print(f"Nu s-au putut sterge tabelele existente (probabil nu existau): {e}")
 
-        # Creează tabelele
-        print("📋 Creare tabele noi...")
+        # Creeaza tabelele
+        print("Creare tabele noi...")
         Base.metadata.create_all(engine)
-        print("✅ Tabele create cu structura nouă!")
+        print("Tabele create cu structura noua!")
 
-        # Adaugă datele default
+        # Adauga datele default
         Session = sessionmaker(bind=engine)
         session = Session()
 
@@ -156,7 +156,7 @@ def main():
             add_default_report_titles(session)
 
             session.commit()
-            print("✅ Date default adăugate!")
+            print("Date default adaugate!")
 
         except Exception as e:
             session.rollback()
@@ -166,40 +166,40 @@ def main():
             engine.dispose()
 
         # Afișează rezumatul
-        print("\n🎉 INIȚIALIZARE COMPLETĂ!")
+        print("\nINITIALIZARE COMPLETA!")
         print("-" * 30)
         print("Tabele create:")
-        print("  📊 users - Utilizatori aplicație (cu titulatura)")
-        print("  🏥 pacs_urls - Configurații PACS")
-        print("  ⚙️ app_settings - Setări aplicație")
-        print("  📄 report_titles - Titluri rapoarte")
+        print("  users - Utilizatori aplicatie (cu titulatura)")
+        print("  pacs_urls - Configuratii PACS")
+        print("  app_settings - Setari aplicatie")
+        print("  report_titles - Titluri rapoarte")
         print("\nConturi utilizator:")
-        print("  👤 admin / admin123 (Administrator)")
-        print("  👤 dr.popescu / doctor123 (Dr. Ioan Popescu)")
-        print("  👤 univ.dr.georgescu / radiolog123 (Univ. Dr. Alexandru Georgescu)")
+        print("  admin / admin123 (Administrator)")
+        print("  dr.popescu / doctor123 (Dr. Ioan Popescu)")
+        print("  univ.dr.georgescu / radiolog123 (Univ. Dr. Alexandru Georgescu)")
         print("\nTitluri rapoarte default:")
-        print("  📋 Scintigrame specializate medicale")
-        print("  📋 Investigații nucleare complete")
-        print("\n⚠️  Schimbă parolele după prima autentificare!")
-        print("\n🚀 Acum poți rula aplicația cu: python app/main.py")
+        print("  Scintigrame specializate medicale")
+        print("  Investigatii nucleare complete")
+        print("\nSchimba parolele dupa prima autentificare!")
+        print("\nAcum poti rula aplicatia cu: python app/main.py")
 
     except Exception as e:
-        print(f"❌ Eroare: {e}")
+        print(f"Eroare: {e}")
         import traceback
         traceback.print_exc()
 
-    input("\nApasă Enter pentru a ieși...")
+    input("\nApasa Enter pentru a iesi...")
 
 
 def create_database_if_needed(db_uri):
-    """Creează baza de date dacă nu există"""
+    """Creeaza baza de date daca nu exista"""
 
     # Extrage numele bazei de date din URI
     parts = db_uri.split('/')
     database_name = parts[-1]
     base_uri = '/'.join(parts[:-1])
 
-    print(f"🔍 Verifică dacă baza de date '{database_name}' există...")
+    print(f"Verifica daca baza de date '{database_name}' exista...")
 
     try:
         temp_engine = create_engine(
@@ -213,24 +213,24 @@ def create_database_if_needed(db_uri):
         with temp_engine.connect() as conn:
             result = conn.execute(text(f"SHOW DATABASES LIKE '{database_name}'"))
             if result.fetchone() is None:
-                print(f"📚 Creare bază de date '{database_name}'...")
+                print(f"Creare baza de date '{database_name}'...")
                 conn.execute(
                     text(f"CREATE DATABASE `{database_name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"))
                 conn.commit()
-                print(f"✅ Baza de date '{database_name}' creată!")
+                print(f"Baza de date '{database_name}' creata!")
             else:
-                print(f"✅ Baza de date '{database_name}' există deja")
+                print(f"Baza de date '{database_name}' exista deja")
         temp_engine.dispose()
 
     except Exception as e:
-        print(f"❌ Eroare la crearea bazei de date: {e}")
+        print(f"Eroare la crearea bazei de date: {e}")
         raise
 
 
 def add_default_users(session):
-    """Adaugă utilizatori default pentru aplicație cu titulatura"""
+    """Adauga utilizatori default pentru aplicatie cu titulatura"""
 
-    print("👤 Creare utilizatori default cu titulatura...")
+    print("Creare utilizatori default cu titulatura...")
 
     # Hash-urile pentru parole
     admin_hash = bcrypt.hashpw("admin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -267,15 +267,15 @@ def add_default_users(session):
     for user in users:
         session.add(user)
         if user.title:
-            print(f"  ✅ {user.username} ({user.title} {user.first_name} {user.last_name})")
+            print(f"  {user.username} ({user.title} {user.first_name} {user.last_name})")
         else:
-            print(f"  ✅ {user.username} ({user.first_name} {user.last_name} - {user.role.value})")
+            print(f"  {user.username} ({user.first_name} {user.last_name} - {user.role.value})")
 
 
 def add_default_pacs(session):
-    """Adaugă PACS-uri default"""
+    """Adauga PACS-uri default"""
 
-    print("🏥 Creare PACS-uri default...")
+    print("Creare PACS-uri default...")
 
     pacs_list = [
         PacsUrl(
@@ -300,13 +300,13 @@ def add_default_pacs(session):
 
     for pacs in pacs_list:
         session.add(pacs)
-        print(f"  ✅ {pacs.name}")
+        print(f"  {pacs.name}")
 
 
 def add_default_settings(session):
-    """Adaugă setări default"""
+    """Adauga setari default"""
 
-    print("⚙️ Creare setări default...")
+    print("Creare setari default...")
 
     settings = [
         AppSettings(
@@ -343,13 +343,13 @@ def add_default_settings(session):
 
     for setting in settings:
         session.add(setting)
-        print(f"  ✅ {setting.setting_key}")
+        print(f"  {setting.setting_key}")
 
 
 def add_default_report_titles(session):
-    """Adaugă titluri default pentru rapoarte"""
+    """Adauga titluri default pentru rapoarte"""
 
-    print("📄 Creare titluri rapoarte default...")
+    print("Creare titluri rapoarte default...")
 
     report_titles = [
         ReportTitle(
@@ -434,7 +434,7 @@ def add_default_report_titles(session):
 
     for title in report_titles:
         session.add(title)
-        print(f"  ✅ {title.title_text}")
+        print(f"  {title.title_text}")
 
 
 if __name__ == "__main__":
