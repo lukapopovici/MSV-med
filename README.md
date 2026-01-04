@@ -7,3 +7,4 @@
 - added basic git files (LICENSE, gitignore)
 - changed the package system from standard to UV (ultra-fast)
 - removed pycache from public repo
+- added opentelemetry integration
