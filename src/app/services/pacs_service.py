@@ -23,18 +23,23 @@ class PacsService(IPacsService):
 
     def get_all_studies(self) -> List[str]:
         try:
-            response = self._http_client.get(f"{self._pacs_url}/studies", auth=self._pacs_auth)
-            return response.json()
+            from app.di.telemetry import start_span
+
+            with start_span("pacs.get_all_studies", {"pacs.url": self._pacs_url}):
+                response = self._http_client.get(f"{self._pacs_url}/studies", auth=self._pacs_auth)
+                return response.json()
         except Exception as e:
             raise PacsConnectionError(f"Nu am putut incarca studiile: {e}")
 
     def get_study_metadata(self, study_id: str) -> Dict[str, Any]:
         try:
-            response = self._http_client.get(f"{self._pacs_url}/studies/{study_id}", auth=self._pacs_auth)
-            data = response.json()
+            from app.di.telemetry import start_span
 
-            return {
-                # Date Pacient - ESENȚIALE
+            with start_span("pacs.get_study_metadata", {"pacs.url": self._pacs_url, "study.id": study_id}):
+                response = self._http_client.get(f"{self._pacs_url}/studies/{study_id}", auth=self._pacs_auth)
+                data = response.json()
+
+                return {                # Date Pacient - ESENȚIALE
                 "Patient Name": data.get('PatientMainDicomTags', {}).get('PatientName', 'N/A'),
                 "CNP": data.get('PatientMainDicomTags', {}).get('PatientID', 'N/A'),
                 "Patient Birth Date": data.get('PatientMainDicomTags', {}).get('PatientBirthDate', 'N/A'),
@@ -84,24 +89,27 @@ class PacsService(IPacsService):
                            examination_result: str = None, anonymize: bool = False) -> bool:
 
         try:
-            instances = self.get_study_instances(study_id)
+            from app.di.telemetry import start_span
 
-            if not instances:
-                raise PacsDataError(f"No instances found in study {study_id}")
+            with start_span("pacs.send_study_to_pacs", {"source.study": study_id, "target.url": target_url}):
+                instances = self.get_study_instances(study_id)
 
-            existing_study_id = self._find_existing_study_in_target(study_id, target_url, target_auth)
+                if not instances:
+                    raise PacsDataError(f"No instances found in study {study_id}")
 
-            if existing_study_id:
+                existing_study_id = self._find_existing_study_in_target(study_id, target_url, target_auth)
 
-                delete_success = self._delete_existing_study(existing_study_id, target_url, target_auth)
+                if existing_study_id:
 
-                if not delete_success:
-                    print(f"Failed to delete existing study, aborting update")
-                    return False
+                    delete_success = self._delete_existing_study(existing_study_id, target_url, target_auth)
 
-                return self._create_new_study(study_id, target_url, target_auth, examination_result, anonymize)
-            else:
-                return self._create_new_study(study_id, target_url, target_auth, examination_result, anonymize)
+                    if not delete_success:
+                        print(f"Failed to delete existing study, aborting update")
+                        return False
+
+                    return self._create_new_study(study_id, target_url, target_auth, examination_result, anonymize)
+                else:
+                    return self._create_new_study(study_id, target_url, target_auth, examination_result, anonymize)
 
         except Exception as e:
             raise PacsConnectionError(f"Nu am putut procesa studiul în PACS: {e}")

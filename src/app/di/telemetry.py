@@ -81,3 +81,33 @@ def init_telemetry(service_name: str | None = None, enable_console_exporter: boo
 
     except Exception as e:  # pragma: no cover - best-effort initialization
         print(f"Warning: could not initialize OpenTelemetry: {e}")
+
+
+# Helper context manager to start spans in application code. Returns a no-op context
+# manager when opentelemetry is not available so instrumentation calls become
+# best-effort and won't raise when packages are missing.
+from contextlib import contextmanager
+
+
+def start_span(name: str, attributes: dict | None = None):
+    """Return a context manager that starts an OpenTelemetry span named `name`.
+
+    Usage:
+        from app.di.telemetry import start_span
+
+        with start_span("pacs.get_study", {"study.id": study_id}):
+            ...
+
+    This function will return a no-op context manager if OpenTelemetry is not
+    installed or if tracer creation fails.
+    """
+    try:
+        from opentelemetry import trace
+        tracer = trace.get_tracer(__name__)
+        return tracer.start_as_current_span(name, attributes=attributes or {})
+    except Exception:
+        @contextmanager
+        def _noop():
+            yield
+
+        return _noop()
