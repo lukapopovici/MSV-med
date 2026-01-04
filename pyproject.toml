@@ -1,9 +1,9 @@
 [project]
-name = "my_project"
+name = "app"
 version = "0.1.0"
 description = ""
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 
 dependencies = [
     "altgraph==0.17.4",
