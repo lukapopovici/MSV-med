@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QApplication
 from app.presentation.views.login_view import LoginView
 from app.di.container import Container
 from app.config.settings import Settings
+from app.di.telemetry import init_telemetry
 
 
 def setup_application():
@@ -33,6 +34,12 @@ def log_session_info():
 
 def main():
     print("Starting Medical PACS Application...")
+
+    # Initialize OpenTelemetry (best-effort)
+    try:
+        init_telemetry()
+    except Exception as e:
+        print(f"OpenTelemetry init failed: {e}")
 
     app = QApplication(sys.argv)
     app.setApplicationName("Medical PACS System")
