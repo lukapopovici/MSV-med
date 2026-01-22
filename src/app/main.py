@@ -43,7 +43,7 @@ def main():
 
     app = QApplication(sys.argv)
     app.setApplicationName("Medical PACS System")
-    app.setApplicationVersion("1.0.0")
+    app.setApplicationVersion("2.0.0")
     app.setOrganizationName("Medical Solutions Inc.")
 
     try:

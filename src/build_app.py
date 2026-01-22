@@ -13,7 +13,7 @@ from datetime import datetime
 
 # Configurare
 APP_NAME = "MediCore-PACS"
-APP_VERSION = "1.0.0"
+APP_VERSION = "2.0.0"
 MAIN_SCRIPT = "app/main.py"
 
 def install_pyinstaller():

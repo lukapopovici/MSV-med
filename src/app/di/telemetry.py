@@ -47,11 +47,14 @@ def init_telemetry(service_name: str | None = None, enable_console_exporter: boo
         provider = TracerProvider(resource=resource)
         trace.set_tracer_provider(provider)
 
-        # Add exporters
+        # Add OTLP exporter pointing to our span collector service
         if OTLPSpanExporter is not None:
             try:
-                otlp_exporter = OTLPSpanExporter()
+                # Default to localhost:4317 if not set via environment
+                otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+                otlp_exporter = OTLPSpanExporter(endpoint=otlp_endpoint, insecure=True)
                 provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+                print(f"OTLP exporter configured for {otlp_endpoint}")
             except Exception as e:
                 print(f"Warning: OTLP exporter could not be initialized: {e}")
 
