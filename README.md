@@ -28,3 +28,7 @@ uv sync
 - changed the package system from standard to UV (ultra-fast)
 - removed pycache from public repo
 - added opentelemetry integration
+- added tracing receiver + rest interface for querrying
+
+## TODO 
+Dockerize the app itself in a container + opentel receiver and rest
